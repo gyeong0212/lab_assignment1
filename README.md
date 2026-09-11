@@ -69,17 +69,13 @@ python src/05_visualize_results.py
 | 방법 | 최종 Accuracy | 최종 Macro F1 |
 |---|---:|---:|
 | Inference Only | 0.670 | 0.446 |
-| LoRA v5 | 0.746 | 0.533 |
-| Full Fine-tuning v3 | 0.750 | 0.553 |
+| LoRA | 0.746 | 0.533 |
+| Full Fine-tuning | 0.750 | 0.553 |
 
 | 방법 | 10-fold Accuracy | 10-fold Macro F1 |
 |---|---:|---:|
-| LoRA v5 | 0.742 ± 0.055 | 0.558 ± 0.076 |
-| Full Fine-tuning v3 | 0.774 ± 0.043 | 0.586 ± 0.070 |
-
-LoRA 최종 모델 디렉터리는 27.6 MiB, Full Fine-tuning 최종 모델
-디렉터리는 2.89 GiB입니다. LoRA 용량은 어댑터와 관련 파일만 포함하며,
-실제 추론에는 기본 모델이 별도로 필요합니다.
+| LoRA | 0.742 ± 0.055 | 0.558 ± 0.076 |
+| Full Fine-tuning | 0.774 ± 0.043 | 0.586 ± 0.070 |
 
 ## 재현성 참고
 
