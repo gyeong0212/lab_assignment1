@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Experiment trackers and logs
+wandb/
+src/wandb/
+*.log
+
+# Downloaded third-party dataset repository
+pubmedqa_official/
+
+# Large experiment outputs; keep only the four report figures.
+outputs/*
+!outputs/qwen2.5-1.5b/
+outputs/qwen2.5-1.5b/*
+!outputs/qwen2.5-1.5b/model_comparison_visualizations/
+outputs/qwen2.5-1.5b/model_comparison_visualizations/*
+!outputs/qwen2.5-1.5b/model_comparison_visualizations/01_overall_metrics.png
+!outputs/qwen2.5-1.5b/model_comparison_visualizations/01_overall_metrics.pdf
+!outputs/qwen2.5-1.5b/model_comparison_visualizations/02_class_f1.png
+!outputs/qwen2.5-1.5b/model_comparison_visualizations/02_class_f1.pdf
+!outputs/qwen2.5-1.5b/model_comparison_visualizations/03_normalized_confusion_matrices.png
+!outputs/qwen2.5-1.5b/model_comparison_visualizations/03_normalized_confusion_matrices.pdf
+!outputs/qwen2.5-1.5b/model_comparison_visualizations/10_performance_efficiency.png
+!outputs/qwen2.5-1.5b/model_comparison_visualizations/10_performance_efficiency.pdf
+
+# Local drafts and obsolete experiment notes
+assets/
+original_inference
+LoRA_v4_변경사항_정리.md
+발표_초안_구현방식과_관련개념.md
+실험_결과_분석.md
