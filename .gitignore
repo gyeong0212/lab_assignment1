@@ -13,20 +13,8 @@ src/wandb/
 # Downloaded third-party dataset repository
 pubmedqa_official/
 
-# Large experiment outputs; keep only the four report figures.
-outputs/*
-!outputs/qwen2.5-1.5b/
-outputs/qwen2.5-1.5b/*
-!outputs/qwen2.5-1.5b/model_comparison_visualizations/
-outputs/qwen2.5-1.5b/model_comparison_visualizations/*
-!outputs/qwen2.5-1.5b/model_comparison_visualizations/01_overall_metrics.png
-!outputs/qwen2.5-1.5b/model_comparison_visualizations/01_overall_metrics.pdf
-!outputs/qwen2.5-1.5b/model_comparison_visualizations/02_class_f1.png
-!outputs/qwen2.5-1.5b/model_comparison_visualizations/02_class_f1.pdf
-!outputs/qwen2.5-1.5b/model_comparison_visualizations/03_normalized_confusion_matrices.png
-!outputs/qwen2.5-1.5b/model_comparison_visualizations/03_normalized_confusion_matrices.pdf
-!outputs/qwen2.5-1.5b/model_comparison_visualizations/10_performance_efficiency.png
-!outputs/qwen2.5-1.5b/model_comparison_visualizations/10_performance_efficiency.pdf
+# Generated experiment outputs remain local.
+outputs/
 
 # Local drafts and obsolete experiment notes
 assets/
