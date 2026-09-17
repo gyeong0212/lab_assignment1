@@ -1,87 +1,43 @@
-# PubMedQA: Full Fine-tuning vs. LoRA
+# PubMedQA: Inference Only, Full Fine-tuning, LoRA
 
-Qwen2.5-1.5B-Instruct를 PubMedQA PQA-L에 적용하여 Inference Only,
-Full Fine-tuning, LoRA를 비교한 실험 코드입니다. 보고서에 사용한 모델은
-**LoRA v5**와 **Full Fine-tuning v3**이며, 학습·교차검증·최종 평가 모두
-문맥의 섹션 라벨을 입력에 포함하지 않습니다.
+Qwen2.5-1.5B-Instruct와 PubMedQA PQA-L의 공식 분할로 세 방법을 비교하는 코드입니다.
+모든 방법은 문맥의 섹션 라벨을 포함한 동일한 입력을 사용합니다.
 
-## 실험 구성
+## 실험 절차
 
-- 기본 모델: `Qwen/Qwen2.5-1.5B-Instruct`
-- 데이터: PubMedQA PQA-L 1,000개
-- 모델 선택 데이터: 공식 10-fold의 500개 샘플
-- 최종 평가 데이터: 공식 test set 500개
-- 분류 라벨: `yes`, `no`, `maybe`
-- 클래스 손실 가중치: `1.0`, `1.0`, `1.5`
-- LoRA: rank 16, alpha 32, dropout 0.05
-- 시드: 42
+- 공식 test set 500개를 최종 평가에만 사용합니다.
+- 나머지 500개를 공식 10개 fold로 나누어, 방법별로 각 fold의 450개에서 기본 모델부터 3 epoch 학습합니다.
+- 각 fold에서 검증 Macro F1이 가장 높은 epoch의 모델을 저장합니다. Full Fine-tuning은 전체 가중치를, LoRA는 rank 16, alpha 32, dropout 0.05의 어댑터를 학습합니다.
+- 두 방법 모두 `yes/no/maybe` 첫 답변 토큰에만 손실을 계산하며, 손실 가중치는 `1/1/1.5`입니다. 학습률은 Full Fine-tuning `2e-5`, LoRA `1e-4`이고, 실질적인 batch size는 8입니다.
+- 각 fold의 검증 예측을 합친 OOF 결과로 출력 보정값을 비교합니다. Accuracy와 클래스별 F1을 유지하는 후보 중 Macro F1이 가장 높은 보정을 선택합니다. 적합한 후보가 없으면 보정을 적용하지 않습니다.
+- 최종 평가에서는 각 방법의 fold 모델 10개를 test set의 각 샘플에 적용하고, 클래스별 logit을 평균한 뒤 OOF에서 결정한 보정을 반영합니다. 전체 500개로 별도 재학습하지 않습니다.
 
-## 파일 구성
+## 실행
 
-```text
-src/
-├── 01_download_dataset.py       # 공식 데이터 다운로드 및 split 검증
-├── 02_inference_only.py         # 기본 모델 최종 평가
-├── 03_finetune.py               # 10-fold CV 및 전체 데이터 재학습
-├── 04_evaluate_finetuned.py     # LoRA v5 / Full v3 최종 평가
-├── 05_visualize_results.py      # 보고서 그림 1, 2, 3, 10 생성
-├── training_setup.py            # 모델·LoRA·Trainer 설정
-├── training_utils.py            # 데이터 전처리와 collator
-├── training_recorder.py         # 학습 결과 기록
-└── utils.py                     # 공통 프롬프트·평가·JSON 함수
-```
-
-## 설치
-
-Python 3.11과 CUDA GPU 환경을 권장합니다.
+CUDA GPU와 Python 3.11 환경에서 의존성을 설치한 뒤, 프로젝트 루트에서 실행합니다.
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-## 실행 순서
-
-프로젝트 루트에서 다음 명령을 실행합니다.
-
-```bash
 python src/01_download_dataset.py
 python src/02_inference_only.py
-
 python src/03_finetune.py --method lora
 python src/03_finetune.py --method full
-
 python src/04_evaluate_finetuned.py --method lora
 python src/04_evaluate_finetuned.py --method full
-
-python src/05_visualize_results.py
 ```
 
-`03_finetune.py`는 각 방법에 대해 10-fold 학습 후 500개 전체 학습
-샘플로 최종 모델을 다시 학습하므로 실행 시간이 오래 걸리고 저장 공간을
-많이 사용합니다. 결과와 체크포인트는 `outputs/` 아래에 저장됩니다.
-최종 평가 JSON은 `outputs/qwen2.5-1.5b/evaluation/`, 보고서 그림은
-`outputs/qwen2.5-1.5b/model_comparison_visualizations/`에 저장됩니다.
+`03_finetune.py`는 fold별 모델, OOF 점수, 교차검증 요약, 보정 선택 결과를
+`outputs/qwen2.5-1.5b/` 아래에 저장합니다. `04_evaluate_finetuned.py`는
+저장된 fold 모델과 OOF 점수를 사용하여 최종 앙상블 예측을 저장합니다.
+Full Fine-tuning의 저장된 OOF 점수에서는 `maybe` logit `-0.1`이 선택되고,
+LoRA에서는 출력 보정을 적용하지 않습니다.
 
-## 주요 결과
+## 보고서 최종 평가 결과
 
-| 방법 | 최종 Accuracy | 최종 Macro F1 |
+| 방법 | Accuracy | Macro F1 |
 |---|---:|---:|
-| Inference Only | 0.670 | 0.446 |
-| LoRA | 0.746 | 0.533 |
-| Full Fine-tuning | 0.750 | 0.553 |
+| Inference Only | 0.676 | 0.454 |
+| LoRA | 0.750 | 0.547 |
+| Full Fine-tuning | 0.754 | 0.574 |
 
-| 방법 | 10-fold Accuracy | 10-fold Macro F1 |
-|---|---:|---:|
-| LoRA | 0.742 ± 0.055 | 0.558 ± 0.076 |
-| Full Fine-tuning | 0.774 ± 0.043 | 0.586 ± 0.070 |
-
-## 재현성 참고
-
-- 모든 방법은 동일한 시스템 프롬프트와 섹션 라벨 없는 입력을 사용합니다.
-- 평가는 생성 문자열 파싱 대신 첫 답변 위치의 `yes/no/maybe` 토큰 logit 중
-  가장 큰 값을 선택합니다.
-- 대용량 체크포인트, 실행 로그 및 원시 결과는 `.gitignore`로 제외됩니다.
-- PubMedQA 데이터는 실행 시 [공식 저장소](https://github.com/pubmedqa/pubmedqa)에서
-  내려받습니다.
+LoRA의 모델 저장 용량은 어댑터만 포함하며, 추론에는 기본 모델도 필요합니다.
